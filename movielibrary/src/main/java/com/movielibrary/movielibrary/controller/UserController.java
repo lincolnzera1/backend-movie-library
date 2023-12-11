@@ -11,12 +11,14 @@ import com.movielibrary.movielibrary.user.UserResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 
 
+import java.net.Authenticator;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -40,7 +42,7 @@ public class UserController {
         return userList;
     }
 
-    // Endpoint para salvar um novo filme
+    // Endpoint para salvar um novo usuário
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     @PostMapping
     public ResponseEntity<Object> createUser(@RequestBody UserRequestDTO data){
@@ -58,6 +60,34 @@ public class UserController {
             URI location = new URI("/user/" + userData.getId());
             return ResponseEntity.created(location).build();
 
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // Endpoint para realizar o login do usuário
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @PostMapping("/login")
+    public ResponseEntity<Object> loginUser(@RequestBody UserRequestDTO loginData){
+        try {
+            // Encontrar o usuário pelo nome de usuário
+            Optional<User> user = repository.findByUsername(loginData.username());
+
+
+            if (user.isPresent()) {
+                // Verificar se a senha fornecida coincide com a senha armazenada (usando o PasswordEncoder)
+                if (passwordEncoder.matches(loginData.password(), user.get().getPassword())) {
+                    // Autenticação bem-sucedida
+                    return ResponseEntity.ok().build(); // Você pode retornar mais informações se necessário
+                } else {
+                    // Senha incorreta
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // Resposta 401 Unauthorized
+                }
+            } else {
+                // Usuário não encontrado
+                System.out.println("Usuario não encontrado!!");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // Resposta 401 Unauthorized
+            }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
