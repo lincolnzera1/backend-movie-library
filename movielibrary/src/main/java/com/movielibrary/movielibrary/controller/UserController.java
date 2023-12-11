@@ -8,6 +8,11 @@ import com.movielibrary.movielibrary.user.User;
 import com.movielibrary.movielibrary.user.UserRepository;
 import com.movielibrary.movielibrary.user.UserRequestDTO;
 import com.movielibrary.movielibrary.user.UserResponseDTO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +39,13 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
 
     // Endpoint para obter todos os usuários
+    @Operation(summary = "Obter todos os usuários", description = "Este endpoint retorna uma lista de todos os usuários cadastrados.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de usuários obtida com sucesso.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor.") // Adicione mais respostas conforme necessário
+    })
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     @GetMapping
     public List<UserResponseDTO> getAll(){
@@ -43,10 +55,18 @@ public class UserController {
     }
 
     // Endpoint para salvar um novo usuário
+    @Operation(summary = "Criar um novo usuário", description = "Este endpoint cria um novo usuário no sistema.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor ao criar o usuário.") // Adicione mais respostas conforme necessário
+    })
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     @PostMapping
     public ResponseEntity<Object> createUser(@RequestBody UserRequestDTO data){
         try {
+            // Criptografa a senha antes de salvar no banco
             String encryptedPassword = passwordEncoder.encode(data.password());
 
             // Cria um novo usuário com a senha criptografada
@@ -57,15 +77,23 @@ public class UserController {
             // Salva o usuário no banco de dados usando o repository
             repository.save(userData);
 
+            // Retorna a resposta com o código 201 e o local do novo recurso criado
             URI location = new URI("/user/" + userData.getId());
             return ResponseEntity.created(location).build();
 
         } catch (Exception e) {
+            // Em caso de erro, retorna uma resposta com código 500
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     // Endpoint para realizar o login do usuário
+    @Operation(summary = "Autenticar usuário", description = "Este endpoint autentica o usuário no sistema.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Autenticação bem-sucedida."),
+            @ApiResponse(responseCode = "401", description = "Credenciais inválidas."),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor ao autenticar o usuário.") // Adicione mais respostas conforme necessário
+    })
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     @PostMapping("/login")
     public ResponseEntity<Object> loginUser(@RequestBody UserRequestDTO loginData){
@@ -73,12 +101,11 @@ public class UserController {
             // Encontrar o usuário pelo nome de usuário
             Optional<User> user = repository.findByUsername(loginData.username());
 
-
             if (user.isPresent()) {
                 // Verificar se a senha fornecida coincide com a senha armazenada (usando o PasswordEncoder)
                 if (passwordEncoder.matches(loginData.password(), user.get().getPassword())) {
                     // Autenticação bem-sucedida
-                    return ResponseEntity.ok().build(); // Você pode retornar mais informações se necessário
+                    return ResponseEntity.ok().build();
                 } else {
                     // Senha incorreta
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // Resposta 401 Unauthorized
@@ -89,42 +116,18 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // Resposta 401 Unauthorized
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    // Endpoint para atualizar os dados de um usuário por ID
-    @CrossOrigin(origins = "*", allowedHeaders = "*")
-    @PutMapping("/{id}")
-    public ResponseEntity<Object> updateUser(@PathVariable Long id, @RequestBody UserRequestDTO newData){
-        try {
-            // Busca o usuário pelo ID
-            Optional<User> userToUpdate = repository.findById(id);
-
-
-            if (userToUpdate.isPresent()) {
-                User existingUser = userToUpdate.get();
-                // Atualiza os dados do usuário com os novos dados
-                existingUser.updateFromDTO(newData);
-
-                // Verifica se a senha foi fornecida na solicitação
-                if (newData.password() != null && !newData.password().isEmpty()) {
-                    // Criptografa a nova senha e atualiza no usuário existente
-                    String encryptedPassword = passwordEncoder.encode(newData.password());
-                    existingUser.setPassword(encryptedPassword);
-                }
-
-                repository.save(existingUser);
-                return ResponseEntity.ok().build(); // Resposta 200 OK
-            } else {
-                return ResponseEntity.notFound().build(); // Resposta 404 Not Found
-            }
-        } catch (Exception e) {
+            // Em caso de erro, retorna uma resposta com código 500
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     // Endpoint para deletar um usuário por ID
+    @Operation(summary = "Deletar usuário", description = "Este endpoint exclui um usuário com base no ID fornecido.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Usuário deletado com sucesso."),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado para o ID fornecido."),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor ao excluir o usuário.") // Adicione mais respostas conforme necessário
+    })
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteMovie(@PathVariable("id") Long id){
