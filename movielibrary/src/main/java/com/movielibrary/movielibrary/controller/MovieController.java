@@ -37,14 +37,29 @@ public class MovieController {
         }
     }
 
-    // Endpoint para obter todos os filmes
+    // Endpoint para obter todos os filmes, com a opção de pesquisa por título
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     @GetMapping
-    public List<MovieResponseDTO> getAll(){
-        // Obtém todos os filmes da tabela "movie" usando o repository
-        List<MovieResponseDTO> movieList = repository.findAll().stream().map(MovieResponseDTO::new).toList();
-        return movieList;
+    public List<MovieResponseDTO> getAll(@RequestParam(required = false) String title){
+        // Se houver um parâmetro de pesquisa, filtra os filmes por título
+        if (title != null && !title.isEmpty()) {
+            return repository.findByTitleContainingIgnoreCase(title)
+                    .stream().map(MovieResponseDTO::new).toList();
+        }
+
+        // Caso contrário, retorna todos os filmes
+        return repository.findAll().stream().map(MovieResponseDTO::new).toList();
     }
+
+    // Endpoint para buscar filmes por uma letra específica no título
+//    @CrossOrigin(origins = "*", allowedHeaders = "*")
+//    @GetMapping
+//    public List<MovieResponseDTO> searchMoviesByLetter(@RequestParam String title){
+//        // Obtém todos os filmes da tabela "movie" que contenham a letra no título usando o repository
+//        List<MovieResponseDTO> movieList = repository.findByTitleContainingIgnoreCase(String.valueOf(title))
+//                .stream().map(MovieResponseDTO::new).toList();
+//        return movieList;
+//    }
 
     // Endpoint para deletar um filme por ID
     @CrossOrigin(origins = "*", allowedHeaders = "*")
