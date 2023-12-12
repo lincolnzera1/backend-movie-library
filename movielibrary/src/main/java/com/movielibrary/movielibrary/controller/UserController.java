@@ -20,7 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
+import org.springframework.web.server.ResponseStatusException;
 
 
 import java.net.Authenticator;
@@ -49,9 +49,13 @@ public class UserController {
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     @GetMapping
     public List<UserResponseDTO> getAll(){
-        // Obtém todos os usuários da tabela "users" usando o repository
-        List<UserResponseDTO> userList = repository.findAll().stream().map(UserResponseDTO::new).toList();
-        return userList;
+        try {
+            // Obtém todos os usuários da tabela "users" usando o repository
+            List<UserResponseDTO> userList = repository.findAll().stream().map(UserResponseDTO::new).toList();
+            return userList;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao obter a lista de usuários.", e);
+        }
     }
 
     // Endpoint para salvar um novo usuário
@@ -130,7 +134,7 @@ public class UserController {
     })
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteMovie(@PathVariable("id") Long id){
+    public ResponseEntity<Object> deleteUser(@PathVariable("id") Long id){
         try {
             // Verifica se o usuário existe no banco de dados
             if (repository.existsById(id)) {
