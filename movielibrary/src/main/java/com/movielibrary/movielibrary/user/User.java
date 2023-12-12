@@ -1,8 +1,11 @@
 package com.movielibrary.movielibrary.user;
 
 import com.movielibrary.movielibrary.movie.MovieRequestDTO;
+import com.movielibrary.movielibrary.rating.Rating;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Table(name = "users") // Nome da tabela no database
 @Entity(name = "users") // Nome da entidade
@@ -18,6 +21,7 @@ public class User {
     private String username;
     private String email;
     private String password;
+
 
 
     public User(UserRequestDTO data){

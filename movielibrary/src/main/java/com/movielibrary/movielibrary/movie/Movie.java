@@ -1,10 +1,13 @@
 package com.movielibrary.movielibrary.movie;
 
+import com.movielibrary.movielibrary.rating.Rating;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import java.util.Date;
+import java.util.List;
+
 import lombok.NoArgsConstructor;
 
 @Table(name = "movies") // Nome da tabela no database
@@ -22,6 +25,7 @@ public class Movie {
     private Integer rating;
     private String synopsis;
     private String image;
+
 
 
     public Movie(MovieRequestDTO data){
