@@ -109,7 +109,8 @@ public class UserController {
                 // Verificar se a senha fornecida coincide com a senha armazenada (usando o PasswordEncoder)
                 if (passwordEncoder.matches(loginData.password(), user.get().getPassword())) {
                     // Autenticação bem-sucedida
-                    return ResponseEntity.ok().build();
+                    UserResponseDTO userResponse = new UserResponseDTO(user.get()); // Crie um DTO para representar o usuário na resposta
+                    return ResponseEntity.ok().body(userResponse);
                 } else {
                     // Senha incorreta
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // Resposta 401 Unauthorized
